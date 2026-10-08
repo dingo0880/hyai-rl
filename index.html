@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>초파리 첫 피아노 연주회</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+  <!-- 헤더 -->
+  <header class="topbar dimmable">
+    <h1>🪰 초파리 첫 피아노 연주회</h1>
+    <span class="pres-badge" id="presBadge" hidden>발표 모드 1 / 6</span>
+    <div class="counter">연습 <b id="epCount">0</b>회차</div>
+    <button class="icon-btn" id="btnInfo" title="이 데모는? (정보)" aria-label="정보">ⓘ</button>
+    <button class="icon-btn" id="btnMute" title="소리 끄기 / 켜기 (M)" aria-label="소리">🔊</button>
+    <button class="icon-btn" id="btnFull" title="전체화면 (F)" aria-label="전체화면">⛶</button>
+  </header>
+
+  <main class="main">
+    <!-- 무대 -->
+    <section class="stage" id="stage" aria-label="무대">
+      <div class="stage-dim"></div>
+      <div class="strip" id="strip"><div class="strip-track" id="stripTrack"></div></div>
+      <div class="performer" id="performer">
+        <div class="spot" id="spot"></div>
+        <div class="piano">
+          <div class="keys" id="keys">
+            <div class="fly-mover" id="flyMover">
+              <div class="bubble" id="bubble"></div>
+              <div class="fly-hop" id="flyHop"><div class="fly" id="fly"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="audience" id="audience"></div>
+      <div class="caption" id="caption"><div class="caption-text" id="captionText"></div></div>
+      <div class="tl-progress" id="tlProgress" hidden></div>
+      <div class="fast-badge" id="fastBadge">⏩ 빨리 연습 중</div>
+      <div class="result-card" id="resultCard" role="dialog" aria-live="polite">
+        <div class="rc-title" id="rcTitle">연주회 결과</div>
+        <div class="rc-score" id="rcScore"></div>
+        <div class="rc-stars" id="rcStars"></div>
+        <div class="rc-critic" id="rcCritic"></div>
+        <div class="rc-crowd" id="rcCrowd"></div>
+        <div class="rc-actions"><button class="btn small" id="rcClose">닫기 (Esc)</button></div>
+      </div>
+    </section>
+
+    <!-- 초파리 머릿속 -->
+    <aside class="brain dimmable" id="brainPanel" aria-label="초파리 머릿속">
+      <h2>🧠 초파리 머릿속 <span class="bp-mode" id="bpMode">대기 중</span></h2>
+      <div class="bp-sec">
+        <div class="bp-title">① 지금 보는 것 <small>(상태)</small></div>
+        <div class="bp-state" id="bpState"><span class="dim">연습을 시작하면 보여요</span></div>
+      </div>
+      <div class="bp-sec grow">
+        <div class="bp-title">② 케년세포 <small id="kcSub">(2,000개 중 200개만 그림)</small></div>
+        <div class="kc-wrap"><canvas id="kcCanvas"></canvas></div>
+        <div class="bp-cap" id="kcCap">2,000개 중 약 100개만 켜져요 — 상황마다 켜지는 세포가 달라요</div>
+      </div>
+      <div class="bp-sec grow">
+        <div class="bp-title">③ 치고 싶은 건반 <small>(가치 = 예상 보상 · 아래 숫자는 고를 확률)</small></div>
+        <div class="vbars" id="vbars"></div>
+      </div>
+      <div class="bp-sec">
+        <div class="bp-title">④ 도파민 <small>(예측오차 = 실제 − 예상)</small></div>
+        <div class="dopa" id="dopa">
+          <div class="dopa-track"><div class="dopa-zero"></div><div class="dopa-bar" id="dopaBar"></div></div>
+          <div class="dopa-text" id="dopaText"><span class="note">맞으면 설탕(+1), 틀리면 찌릿(−1)</span></div>
+        </div>
+      </div>
+      <button class="term-toggle" id="termToggle">📖 용어표 (강화학습 ↔ 화면 ↔ 초파리 뇌)</button>
+      <div class="term-pop" id="termPop">
+        <h3>📖 용어표 <button class="btn small ghost" id="termClose">닫기</button></h3>
+        <table class="terms" id="termTable"></table>
+      </div>
+    </aside>
+  </main>
+
+  <!-- 하단 컨트롤 -->
+  <footer class="controls dimmable">
+    <div class="row">
+      <button class="btn" id="btnLive" title="Space">▶ 연습 1회</button>
+      <button class="btn" id="btnX10">⏩ 연습 ×10</button>
+      <button class="btn" id="btnX100">⏭ 연습 ×100</button>
+      <button class="btn" id="btnConcert" title="C">🎹 연주회 열기</button>
+      <button class="btn ghost" id="btnReset" title="R">↺ 처음부터</button>
+      <span class="spacer"></span>
+      <button class="btn ghost small" id="btnSettings" title="S">⚙ 설정</button>
+    </div>
+    <div class="row">
+      <span class="row-label">연습 일지:</span>
+      <div class="chips" id="chips"></div>
+      <button class="btn small" id="btnTimelapse" title="T">🎬 성장 타임랩스</button>
+      <button class="btn small ghost" id="btnCompare" hidden>🏫 대치동 vs 산골</button>
+    </div>
+    <div class="charts">
+      <div class="chart-card">
+        <h3>학습 곡선 <small>— 연습마다 몇 번째 음까지 갔나</small></h3>
+        <div class="cv"><canvas id="cvLearn"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>놀람(도파민) 곡선 <small>— 잘할수록 놀랄 일이 줄어요</small></h3>
+        <div class="cv"><canvas id="cvSurprise"></canvas></div>
+      </div>
+      <div class="chart-card clickable" id="growthCard" title="클릭하면 크게 (G)">
+        <h3>성장 지도 <small>— 금색 = 맞음 ✓, 빨강 = 틀림 ✗ (클릭하면 크게)</small></h3>
+        <div class="cv"><canvas id="cvGrowth"></canvas></div>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<button class="icon-btn help-btn" id="btnHelp" title="단축키 (?)" aria-label="단축키 도움말">?</button>
+
+<!-- 정보 창 -->
+<div class="modal" id="modalInfo">
+  <div class="modal-box">
+    <button class="btn small ghost modal-close" data-close>닫기</button>
+    <h2>ⓘ 이 데모는?</h2>
+    <p>초파리 뇌의 <b>버섯체</b>를 흉내 낸 작은 신경망이 "반짝반짝 작은 별"을 연습해요.</p>
+    <p>선생님은 <b>"맞았어(설탕 +1) / 틀렸어(찌릿 −1)"</b>만 알려줘요. 정답 악보는 보여주지 않아요.</p>
+    <p>처음엔 아무 건반이나 치다가, 연습할수록 예상과 실제의 차이(<b>도파민</b>)로 조금씩 배워서 끝까지 치게 돼요. 이것이 <b>강화학습</b>이에요.</p>
+    <p class="notice">실제 초파리 뇌 전체가 아니라, 버섯체의 학습 구조를 본뜬 작은 모델이에요.</p>
+
+    <h3>실제 초파리 뇌와의 대응</h3>
+    <ul>
+      <li><b>투사뉴런 (PN, 22개)</b> — 감각 입력: 지금 몇 소절 · 몇 번째 박인지 + 방금 들린 음</li>
+      <li><b>케년세포 (KC, 2,000개)</b> — 입력을 넓게 펼쳐서 상위 5%만 켜요 (APL 뉴런의 전체 억제를 흉내). 비슷한 상황도 서로 다른 패턴이 돼서 덜 헷갈려요.</li>
+      <li><b>버섯체 출력 뉴런 (MBON, 8개)</b> — 건반 8개 각각을 "치면 좋을 것 같은 정도"</li>
+      <li><b>도파민 뉴런 (DAN)</b> — 실제 보상 − 예상 보상 (예측오차). 켜진 케년세포 → 고른 건반 연결을 이만큼 바꿔요.</li>
+    </ul>
+
+    <h3>실제 초파리와 다른 점</h3>
+    <ul>
+      <li>실제로는 도파민이 KC→MBON 시냅스를 주로 <b>약하게</b> 만들고, "다가가기"와 "피하기" MBON이 짝을 이뤄요. 이 데모는 이해하기 쉽게 +/− 값을 갖는 연결 하나로 단순화했어요.</li>
+      <li>실제 초파리 한쪽 버섯체의 케년세포는 약 2,000개, 각 세포는 평균 7개 정도의 입력을 받아요. 개수는 비슷하게 맞췄지만 연결은 무작위로 만든 장난감이에요.</li>
+      <li>실제 초파리는 피아노를 치지 않아요. 🙂</li>
+    </ul>
+
+    <h3>용어표</h3>
+    <table class="terms" id="termTable2"></table>
+
+    <h3>저작권</h3>
+    <p>멜로디는 18세기 프랑스 민요 "Ah! vous dirai-je, maman"으로 저작권이 끝났어요. 계이름만 쓰고 가사는 넣지 않았어요. 소리는 전부 브라우저에서 합성하고, 초파리는 직접 그린 그림이에요.</p>
+  </div>
+</div>
+
+<!-- 단축키 도움말 -->
+<div class="modal" id="modalHelp">
+  <div class="modal-box narrow">
+    <button class="btn small ghost modal-close" data-close>닫기</button>
+    <h2>⌨ 단축키</h2>
+    <table class="keys-table">
+      <tr><td><kbd>Space</kbd></td><td>연습 1회</td></tr>
+      <tr><td><kbd>1</kbd> ~ <kbd>7</kbd></td><td>연습 일지 (0회 ~ 300회) 연주회</td></tr>
+      <tr><td><kbd>C</kbd></td><td>연주회 열기 (지금 뇌)</td></tr>
+      <tr><td><kbd>T</kbd></td><td>성장 타임랩스</td></tr>
+      <tr><td><kbd>G</kbd></td><td>성장 지도 크게 보기</td></tr>
+      <tr><td><kbd>F</kbd></td><td>전체화면</td></tr>
+      <tr><td><kbd>M</kbd></td><td>소리 끄기 / 켜기</td></tr>
+      <tr><td><kbd>P</kbd></td><td>발표 모드 시작 / 끝</td></tr>
+      <tr><td><kbd>→</kbd> / <kbd>←</kbd></td><td>발표 모드 다음 / 이전 단계</td></tr>
+      <tr><td><kbd>S</kbd></td><td>설정</td></tr>
+      <tr><td><kbd>Esc</kbd></td><td>진행 중인 것 멈추기, 팝업 닫기</td></tr>
+      <tr><td><kbd>R</kbd></td><td>처음부터 (확인창)</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- 설정 -->
+<div class="modal" id="modalSettings">
+  <div class="modal-box">
+    <button class="btn small ghost modal-close" data-close>닫기</button>
+    <h2>⚙ 설정 <small style="font-size:0.75rem;font-weight:400;color:var(--text-dim)">(발표자용)</small></h2>
+    <p class="settings-note">🔁 표시가 있는 학습 설정을 바꾸면 처음부터 다시 연습해요. 설정은 이 브라우저에 저장돼요 (저장이 안 돼도 기본값으로 동작).</p>
+    <div class="settings-grid" id="settingsGrid"></div>
+    <div class="modal-actions">
+      <button class="btn small ghost" id="btnRefMelody">🎵 정답 멜로디 듣기</button>
+      <button class="btn small ghost" id="btnDefaults">기본값으로</button>
+      <button class="btn small" id="btnApplySettings">적용</button>
+    </div>
+  </div>
+</div>
+
+<!-- 처음부터 확인 -->
+<div class="modal" id="modalConfirm">
+  <div class="modal-box narrow">
+    <h2 id="confirmTitle">처음부터 다시 할까요?</h2>
+    <p id="confirmText">지금까지의 연습과 연습 일지가 모두 지워지고, 갓 태어난 초파리로 돌아가요.</p>
+    <div class="modal-actions">
+      <button class="btn small ghost" data-close>아니요</button>
+      <button class="btn small" id="confirmYes">네, 처음부터</button>
+    </div>
+  </div>
+</div>
+
+<!-- 그래프 크게 보기 -->
+<div class="modal" id="modalCharts">
+  <div class="modal-box wide">
+    <button class="btn small ghost modal-close" data-close>닫기</button>
+    <h2>📈 초파리가 점점 잘하게 되는 과정</h2>
+    <div class="big-charts">
+      <div class="big-chart span2">
+        <h3>성장 지도 <small>— 행 = 연습 일지 단계, 열 = 42음. 금색 ✓ 맞음, 빨강 ✗ 틀림, 회색 = 아직 안 들어봄</small></h3>
+        <div class="cv"><canvas id="cvGrowthBig"></canvas></div>
+      </div>
+      <div class="big-chart">
+        <h3>학습 곡선 <small>— 연습마다 몇 번째 음까지 갔나 (점 = 한 번, 선 = 10회 평균, 깃발 = 연습 일지)</small></h3>
+        <div class="cv"><canvas id="cvLearnBig"></canvas></div>
+      </div>
+      <div class="big-chart">
+        <h3>놀람(도파민) 곡선 <small>— 예상과 실제의 차이 = 학습 신호. 잘할수록 놀랄 일이 줄어요</small></h3>
+        <div class="cv"><canvas id="cvSurpriseBig"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 대치동 vs 산골 -->
+<div class="modal" id="modalCompare">
+  <div class="modal-box wide" style="height:auto">
+    <button class="btn small ghost modal-close" data-close>닫기</button>
+    <h2>🏫 대치동 초파리 vs 🌾 산골 초파리</h2>
+    <div class="compare-stage">
+      <div class="compare-side dense">
+        <div class="fly with-glasses" id="flyDense"></div>
+        <h3>대치동 초파리</h3>
+        <p>선생님이 매 음마다 "맞아 / 틀려"를 바로 알려줘요 (촘촘한 보상)</p>
+        <div class="stat" id="statDense">연습 0회</div>
+        <div class="mini-row" id="rowDense"></div>
+      </div>
+      <div class="compare-side sparse">
+        <div class="fly with-hat" id="flySparse"></div>
+        <h3>산골 초파리</h3>
+        <p>소절이 다 끝나야 "몇 개 맞았다"만 알아요 (드문 보상)</p>
+        <div class="stat" id="statSparse">연습 0회</div>
+        <div class="mini-row" id="rowSparse"></div>
+      </div>
+    </div>
+    <div class="compare-chart">
+      <div class="legend"><b>학습 곡선</b> <span><i class="l-dense"></i>대치동</span><span><i class="l-sparse"></i>산골</span> <span style="color:var(--text-dim)">(10회 평균, 몇 번째 음까지 갔나)</span></div>
+      <div class="cv"><canvas id="cvCompare"></canvas></div>
+    </div>
+    <div class="modal-actions">
+      <span style="flex:1;font-size:0.85rem;color:var(--text-dim)">아래 칸은 지금 뇌로 연주회를 했을 때 맞은 음(금색)과 틀린 음(빨강)이에요.</span>
+      <button class="btn small ghost" id="cmpReset">↺ 처음부터</button>
+      <button class="btn small" id="cmpX10">⏩ 둘 다 ×10</button>
+      <button class="btn small" id="cmpX100">⏭ 둘 다 ×100</button>
+    </div>
+  </div>
+</div>
+
+<!-- 소리 켜기 안내 -->
+<div class="gate open" id="soundGate">
+  <div class="gate-box">🔊 클릭해서 소리 켜기<small>브라우저 정책 때문에 한 번 클릭해야 소리가 나요</small></div>
+</div>
+<!-- 탭에서 돌아왔을 때 -->
+<div class="gate" id="pauseGate">
+  <div class="gate-box">⏸ 일시정지됨<small>클릭하면 이어서 연주해요</small></div>
+</div>
+
+<script src="js/core/rng.js"></script>
+<script src="js/core/events.js"></script>
+<script src="js/rl/song.js"></script>
+<script src="js/rl/env.js"></script>
+<script src="js/rl/brain.js"></script>
+<script src="js/rl/trainer.js"></script>
+<script src="js/audio/synth.js"></script>
+<script src="js/audio/sfx.js"></script>
+<script src="js/ui/stage.js"></script>
+<script src="js/ui/brainPanel.js"></script>
+<script src="js/ui/charts.js"></script>
+<script src="js/ui/controls.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
